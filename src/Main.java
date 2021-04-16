@@ -237,119 +237,26 @@ public class Main {
 //        System.out.println(mtx[250][250].toString());
 
         //calculation of mathematical expectation
+        ImageToolkit tk = new ImageToolkit();
         System.out.println("---calculation of mathematical expectation---");
-        double mRed = 0;
-        double mGreen = 0;
-        double mBlue = 0;
-
-        //---red---
-        for (int i = 0; i < height; i++){
-            for (int j = 0; j < width; j ++){
-                mRed += mtx[i][j].red;
-            }
-        }
-        mRed = mRed/(width*height);
-        System.out.println("red: " + mRed);
-
-        //---green---
-        for (int i = 0; i < height; i++){
-            for (int j = 0; j < width; j ++){
-                mGreen += mtx[i][j].green;
-            }
-        }
-        mGreen = mGreen/(width*height);
-        System.out.println("green: " + mGreen);
-
-        //---blue---
-        for (int i = 0; i < height; i++){
-            for (int j = 0; j < width; j ++){
-                mBlue += mtx[i][j].blue;
-            }
-        }
-        mBlue = mBlue/(width*height);
-        System.out.println("blue: " + mBlue);
-
+        System.out.println("red: " + tk.mexpet(mtx, height, width, "red"));
+        System.out.println("green: " + tk.mexpet(mtx, height, width, "green"));
+        System.out.println("blue: " + tk.mexpet(mtx, height, width, "blue"));
 
 
         //standard deviation estimate
         System.out.println("---standard deviation estimate---");
-        double sigRed = 0;
-        double sigGreen = 0;
-        double sigBlue = 0;
-
-        //---red---
-        for (int i = 0; i < height; i++){
-            for (int j = 0; j < width; j++){
-                sigRed = Math.pow(mtx[i][j].red - mRed, 2);
-            }
-        }
-        sigRed = sigRed/((width*height) - 1);
-        sigRed = Math.sqrt(sigRed);
-        System.out.println("red: " + sigRed);
-
-        //---green---
-        for (int i = 0; i < height; i++){
-            for (int j = 0; j < width; j++){
-                sigGreen = Math.pow(mtx[i][j].green - mGreen, 2);
-            }
-        }
-        sigGreen = sigGreen/((width*height) - 1);
-        sigGreen = Math.sqrt(sigGreen);
-        System.out.println("green: " + sigGreen);
-
-        //---blue---
-        for (int i = 0; i < height; i++){
-            for (int j = 0; j < width; j++){
-                sigBlue = Math.pow(mtx[i][j].blue - mBlue, 2);
-            }
-        }
-        sigBlue = sigBlue/((width*height) - 1);
-        sigBlue = Math.sqrt(sigBlue);
-        System.out.println("blue: " + sigBlue);
+        System.out.println("red: " + tk.sigma(mtx, height, width, "red"));
+        System.out.println("green: " + tk.sigma(mtx, height, width, "green"));
+        System.out.println("blue: " + tk.sigma(mtx, height, width, "blue"));
 
 
 
         //correlation coefficient estimate
         System.out.println("---correlation coefficient estimate---");
-        double rRG = 0;
-        double rRB = 0;
-        double rBG = 0;
-
-        double mX = 0;
-        for (int i = 0; i < height; i++){
-            for (int j = 0; j < width; j++){
-                mX = (mtx[i][j].red - mRed)*(mtx[i][j].green - mGreen);
-            }
-        }
-        mX = mX/(width*height);
-        rRG = mX/(sigRed*sigGreen);
-        System.out.println("RG: " + rRG);
-
-        //---Red and Blue---
-
-        mX = 0;
-        for (int i = 0; i < height; i++){
-            for (int j = 0; j < width; j++){
-                mX = (mtx[i][j].red - mRed)*(mtx[i][j].blue - mBlue);
-            }
-        }
-        mX = mX/(width*height);
-        rRB = mX/(sigRed*sigBlue);
-        System.out.println("RB: " + rRB);
-
-        //---Blue and Green---
-
-        mX = 0;
-        for (int i = 0; i < height; i++){
-            for (int j = 0; j < width; j++){
-                mX = (mtx[i][j].blue - mBlue)*(mtx[i][j].green - mGreen);
-            }
-        }
-        mX = mX/(width*height);
-        rBG = mX/(sigBlue*sigGreen);
-        System.out.println("BG: " + rBG);
-
-
+        System.out.println("RG: " + tk.correlation(mtx, height, width, "red", "green"));
+        System.out.println("RB: " + tk.correlation(mtx, height, width, "red", "blue"));
+        System.out.println("BG: " + tk.correlation(mtx, height, width, "blue", "green"));
 //        //---5---
 
         Pixel[][] YCbCrMtx = new Pixel[height][width];
@@ -403,7 +310,7 @@ public class Main {
         counter = offBits; // [blue byte, green byte, red byte, ...]
         for (int i = 0; i < height; i++){ //read certain byte of color
             for (int j = 0; j < width; j++){
-                Cb = 0.5643*((double) (data[counter] & 0xff)/*blue*/ - Y ) + 128;
+                Cb = 0.5643*((double) (data[counter] & 0xff)/*blue*/ - YCbCrMtx[i][j].blue) + 128;
                 mtx[i][j] = new Pixel((int) Cb, (int) Cb, (int) Cb);
                 YCbCrMtx[i][j] = new Pixel(YCbCrMtx[i][j].blue, (int) Cb, 0);
                 counter += 3;
@@ -444,7 +351,7 @@ public class Main {
         counter = offBits; // [blue byte, green byte, red byte, ...]
         for (int i = 0; i < height; i++){ //read certain byte of color
             for (int j = 0; j < width; j++){
-                Cr = 0.7132*((double) (data[counter + 2] & 0xff)/*red*/ - Y ) + 128;
+                Cr = 0.7132*((double) (data[counter + 2] & 0xff)/*red*/ - YCbCrMtx[i][j].blue ) + 128;
                 mtx[i][j] = new Pixel((int) Cr, (int) Cr, (int) Cr);
                 YCbCrMtx[i][j] = new Pixel(YCbCrMtx[i][j].blue, YCbCrMtx[i][j].green, (int) Cr);
                 counter += 3;
@@ -480,114 +387,26 @@ public class Main {
 
         //---5.1---
 
-        //calculation of mathematical expectation
-        System.out.println("---calculation of mathematical expectation for Y, Cb, Cr---");
-        mRed = 0;
-        mGreen = 0;
-        mBlue = 0;
+        System.out.println("---calculation of mathematical expectation---");
+        System.out.println("Cr: " + tk.mexpet(YCbCrMtx, height, width, "red"));
+        System.out.println("Cb: " + tk.mexpet(YCbCrMtx, height, width, "green"));
+        System.out.println("Y: " + tk.mexpet(YCbCrMtx, height, width, "blue"));
 
-        //---Cr---
-        for (int i = 0; i < height; i++){
-            for (int j = 0; j < width; j ++){
-                mRed += YCbCrMtx[i][j].red;
-            }
-        }
-        mRed = mRed/(width*height);
-        System.out.println("Cr: " + mRed);
-
-        //---Cb---
-        for (int i = 0; i < height; i++){
-            for (int j = 0; j < width; j ++){
-                mGreen += YCbCrMtx[i][j].green;
-            }
-        }
-        mGreen = mGreen/(width*height);
-        System.out.println("Cb: " + mGreen);
-
-        //---Y---
-        for (int i = 0; i < height; i++){
-            for (int j = 0; j < width; j ++){
-                mBlue += YCbCrMtx[i][j].blue;
-            }
-        }
-        mBlue = mBlue/(width*height);
-        System.out.println("Y: " + mBlue);
 
         //standard deviation estimate
-        System.out.println("---standard deviation estimate for Y, Cb, Cr---");
-        sigRed = 0;
-        sigGreen = 0;
-        sigBlue = 0;
+        System.out.println("---standard deviation estimate---");
+        System.out.println("Cr: " + tk.sigma(YCbCrMtx, height, width, "red"));
+        System.out.println("Cb: " + tk.sigma(YCbCrMtx, height, width, "green"));
+        System.out.println("Y: " + tk.sigma(YCbCrMtx, height, width, "blue"));
 
-        //---Cr---
-        for (int i = 0; i < height; i++){
-            for (int j = 0; j < width; j++){
-                sigRed = Math.pow(YCbCrMtx[i][j].red - mRed, 2);
-            }
-        }
-        sigRed = sigRed/((width*height) - 1);
-        sigRed = Math.sqrt(sigRed);
-        System.out.println("Cr: " + sigRed);
 
-        //---Cb---
-        for (int i = 0; i < height; i++){
-            for (int j = 0; j < width; j++){
-                sigGreen = Math.pow(YCbCrMtx[i][j].green - mGreen, 2);
-            }
-        }
-        sigGreen = sigGreen/((width*height) - 1);
-        sigGreen = Math.sqrt(sigGreen);
-        System.out.println("Cb: " + sigGreen);
-
-        //---Y---
-        for (int i = 0; i < height; i++){
-            for (int j = 0; j < width; j++){
-                sigBlue = Math.pow(YCbCrMtx[i][j].blue - mBlue, 2);
-            }
-        }
-        sigBlue = sigBlue/((width*height) - 1);
-        sigBlue = Math.sqrt(sigBlue);
-        System.out.println("Y: " + sigBlue);
 
         //correlation coefficient estimate
-        System.out.println("---correlation coefficient estimate for Y, Cb, Cr---");
-        rRG = 0;
-        rRB = 0;
-        rBG = 0;
+        System.out.println("---correlation coefficient estimate---");
+        System.out.println("CrCb: " + tk.correlation(YCbCrMtx, height, width, "red", "green"));
+        System.out.println("CrY: " + tk.correlation(YCbCrMtx, height, width, "red", "blue"));
+        System.out.println("YCb: " + tk.correlation(YCbCrMtx, height, width, "blue", "green"));
 
-        mX = 0;
-        for (int i = 0; i < height; i++){
-            for (int j = 0; j < width; j++){
-                mX = (YCbCrMtx[i][j].red - mRed)*(YCbCrMtx[i][j].green - mGreen);
-            }
-        }
-        mX = mX/(width*height);
-        rRG = mX/(sigRed*sigGreen);
-        System.out.println("CrCb: " + rRG);
-
-        //---Cr and Y---
-
-        mX = 0;
-        for (int i = 0; i < height; i++){
-            for (int j = 0; j < width; j++){
-                mX = (YCbCrMtx[i][j].red - mRed)*(YCbCrMtx[i][j].blue - mBlue);
-            }
-        }
-        mX = mX/(width*height);
-        rRB = mX/(sigRed*sigBlue);
-        System.out.println("CrY: " + rRB);
-
-        //---Y and Cb---
-
-        mX = 0;
-        for (int i = 0; i < height; i++){
-            for (int j = 0; j < width; j++){
-                mX = (YCbCrMtx[i][j].blue - mBlue)*(YCbCrMtx[i][j].green - mGreen);
-            }
-        }
-        mX = mX/(width*height);
-        rBG = mX/(sigBlue*sigGreen);
-        System.out.println("YCb: " + rBG);
 
         //---7---
 
@@ -599,9 +418,9 @@ public class Main {
         mainLoop:
         for (int i = 0; i < height; i++){ //read certain byte of color
             for (int j = 0; j < width; j++){
-                G = YCbCrMtx[i][j].blue - 0.714*(YCbCrMtx[i][j].red - 128) - 0.334*(YCbCrMtx[i][j].green - 128);
-                R = YCbCrMtx[i][j].blue + 1.402*(YCbCrMtx[i][j].red - 128);
-                B = YCbCrMtx[i][j].blue + 1.772*(YCbCrMtx[i][j].green - 128);
+                G = (double)YCbCrMtx[i][j].blue - 0.714*(double)(YCbCrMtx[i][j].red - 128) - 0.334*(double)(YCbCrMtx[i][j].green - 128);
+                R = (double)YCbCrMtx[i][j].blue + 1.402*(double)(YCbCrMtx[i][j].red - 128);
+                B = (double)YCbCrMtx[i][j].blue + 1.772*(double)(YCbCrMtx[i][j].green - 128);
                 if (G > maxGreen){
                     G = maxGreen;
                 }
@@ -666,6 +485,171 @@ public class Main {
         // R = 179 G = 190 B = 171
         // Y = 184,545 Cb = 120,3565565 Cr = 124,045306
         // R = 179,000519012 G = 189,9 B = 171,000818118
+
+        //---additional task 3.b---
+
+        Pixel[][][] bitPlans = new Pixel[8][height][width];
+        for (int z = 0; z < 8; z++) {
+            mtx = new Pixel[height][width];
+            for (int i = 0; i < height; i++) { //read certain byte of color
+                for (int j = 0; j < width; j++) {
+                    mtx[i][j] = new Pixel(tk.byteFromHighBit(z, tk.getBit((byte)YCbCrMtx[i][j].blue, z)),
+                            tk.byteFromHighBit(z, tk.getBit((byte)YCbCrMtx[i][j].blue, z)),
+                            tk.byteFromHighBit(z, tk.getBit((byte)YCbCrMtx[i][j].blue, z)));
+                }
+//            if (padding != 4){
+//                counter = counter + padding;
+//            }
+            }
+            bitPlans[z] = mtx;
+            outImg = new byte[data.length]; //write header from copy
+            for (int i = 0; i < header.length; i++) {
+                outImg[i] = header[i];
+            }
+            counter = offBits; //counter must write every byte to build pixel
+            buf = new byte[3];
+            for (int i = 0; i < height; i++) { //write image
+                for (int j = 0; j < width; j++) {
+                    buf = mtx[i][j].toByteArray();
+                    outImg[counter] = buf[0];
+                    counter++;
+                    outImg[counter] = buf[1];
+                    counter++;
+                    outImg[counter] = buf[2];
+                    counter++;
+                }
+                if (padding != 4) {
+                    counter = counter + padding;
+                }
+            }
+            bis = new ByteArrayInputStream(outImg);
+            imgOut = ImageIO.read(bis);
+            ImageIO.write(imgOut, "bmp", new File("images\\bitPlane" + z + ".bmp"));
+        }
+        //correlation pairs
+        Pixel[][][] bp0x = new Pixel[7][height][width];
+//        Pixel[][] bp01mtx = new Pixel[height][width];
+//        Pixel[][] bp02mtx = new Pixel[height][width];
+//        Pixel[][] bp03mtx = new Pixel[height][width];
+//        Pixel[][] bp04mtx = new Pixel[height][width];
+//        Pixel[][] bp05mtx = new Pixel[height][width];
+//        Pixel[][] bp06mtx = new Pixel[height][width];
+//        Pixel[][] bp07mtx = new Pixel[height][width];
+
+        Pixel[][][] bp1x = new Pixel[6][height][width];
+//        Pixel[][] bp12mtx = new Pixel[height][width];
+//        Pixel[][] bp13mtx = new Pixel[height][width];
+//        Pixel[][] bp14mtx = new Pixel[height][width];
+//        Pixel[][] bp15mtx = new Pixel[height][width];
+//        Pixel[][] bp16mtx = new Pixel[height][width];
+//        Pixel[][] bp17mtx = new Pixel[height][width];
+
+        Pixel[][][] bp2x = new Pixel[5][height][width];
+//        Pixel[][] bp23mtx = new Pixel[height][width];
+//        Pixel[][] bp24mtx = new Pixel[height][width];
+//        Pixel[][] bp25mtx = new Pixel[height][width];
+//        Pixel[][] bp26mtx = new Pixel[height][width];
+//        Pixel[][] bp27mtx = new Pixel[height][width];
+
+        Pixel[][][] bp3x = new Pixel[4][height][width];
+//        Pixel[][] bp34mtx = new Pixel[height][width];
+//        Pixel[][] bp35mtx = new Pixel[height][width];
+//        Pixel[][] bp36mtx = new Pixel[height][width];
+//        Pixel[][] bp37mtx = new Pixel[height][width];
+
+        Pixel[][][] bp4x = new Pixel[3][height][width];
+//        Pixel[][] bp45mtx = new Pixel[height][width];
+//        Pixel[][] bp46mtx = new Pixel[height][width];
+//        Pixel[][] bp47mtx = new Pixel[height][width];
+
+        Pixel[][][] bp5x = new Pixel[2][height][width];
+//        Pixel[][] bp56mtx = new Pixel[height][width];
+//        Pixel[][] bp57mtx = new Pixel[height][width];
+
+        Pixel[][][] bp6x = new Pixel[1][height][width];
+       // Pixel[][] bp67mtx = new Pixel[height][width];
+
+        for (int z = 1; z < 8; z++){
+            for (int i = 0; i < height; i++){
+                for (int j = 0; j < width; j++){
+                    bp0x[z-1][i][j] = new Pixel(bitPlans[0][i][j].blue, bitPlans[z][i][j].blue, 0);
+                }
+            }
+        }
+        for (int z = 2; z < 8; z++){
+            for (int i = 0; i < height; i++){
+                for (int j = 0; j < width; j++){
+                    bp1x[z-2][i][j] = new Pixel(bitPlans[1][i][j].blue, bitPlans[z][i][j].blue, 0);
+                }
+            }
+        }
+        for (int z = 3; z < 8; z++){
+            for (int i = 0; i < height; i++){
+                for (int j = 0; j < width; j++){
+                    bp2x[z-3][i][j] = new Pixel(bitPlans[2][i][j].blue, bitPlans[z][i][j].blue, 0);
+                }
+            }
+        }for (int z = 4; z < 8; z++){
+            for (int i = 0; i < height; i++){
+                for (int j = 0; j < width; j++){
+                    bp3x[z-4][i][j] = new Pixel(bitPlans[3][i][j].blue, bitPlans[z][i][j].blue, 0);
+                }
+            }
+        }
+        for (int z = 5; z < 8; z++){
+            for (int i = 0; i < height; i++){
+                for (int j = 0; j < width; j++){
+                    bp4x[z-5][i][j] = new Pixel(bitPlans[4][i][j].blue, bitPlans[z][i][j].blue, 0);
+                }
+            }
+        }
+        for (int z = 6; z < 8; z++){
+            for (int i = 0; i < height; i++){
+                for (int j = 0; j < width; j++){
+                    bp5x[z-6][i][j] = new Pixel(bitPlans[5][i][j].blue, bitPlans[z][i][j].blue, 0);
+                }
+            }
+        }
+        for (int z = 7; z < 8; z++){
+            for (int i = 0; i < height; i++){
+                for (int j = 0; j < width; j++){
+                    bp6x[z-7][i][j] = new Pixel(bitPlans[6][i][j].blue, bitPlans[z][i][j].blue, 0);
+                }
+            }
+        }
+
+        //correlation coefficient estimate
+        System.out.println("---correlation coefficient estimate---");
+        System.out.println("--column 1--");
+        for (int i = 0; i < bp0x.length; i++) {
+            System.out.println("bp0" + (i+1) + ": " + tk.correlation(bp0x[i], height, width, "blue", "green"));
+        }
+        System.out.println("--column 2--");
+        for (int i = 0; i < bp1x.length; i++) {
+            System.out.println("bp1" + (i+2) + ": " + tk.correlation(bp1x[i], height, width, "blue", "green"));
+        }
+        System.out.println("--column 3--");
+        for (int i = 0; i < bp2x.length; i++) {
+            System.out.println("bp2" + (i+3) + ": " + tk.correlation(bp2x[i], height, width, "blue", "green"));
+        }
+        System.out.println("--column 4--");
+        for (int i = 0; i < bp3x.length; i++) {
+            System.out.println("bp3" + (i+4) + ": " + tk.correlation(bp3x[i], height, width, "blue", "green"));
+        }
+        System.out.println("--column 5--");
+        for (int i = 0; i < bp4x.length; i++) {
+            System.out.println("bp4" + (i+5) + ": " + tk.correlation(bp4x[i], height, width, "blue", "green"));
+        }
+        System.out.println("--column 6--");
+        for (int i = 0; i < bp5x.length; i++) {
+            System.out.println("bp5" + (i+6) + ": " + tk.correlation(bp5x[i], height, width, "blue", "green"));
+        }
+        System.out.println("--column 7--");
+        for (int i = 0; i < bp6x.length; i++) {
+            System.out.println("bp6" + (i+7) + ": " + tk.correlation(bp6x[i], height, width, "blue", "green"));
+        }
+
+
 
 //        int height = img.getHeight();
 //        int width = img.getWidth();
