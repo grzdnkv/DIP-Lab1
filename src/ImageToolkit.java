@@ -140,6 +140,34 @@ public class ImageToolkit {
         return res;
     }
 
+    public double psnr(Pixel[][] org, Pixel[][] rest, int height, int width, String color){
+        double res = 0;
+        for (int i = 0; i < height; i++){
+            for (int j = 0; j < width; j++){
+                if (color.equals("blue")){
+                    res += Math.pow((org[i][j].blue - rest[i][j].blue), 2);
+                }
+                if (color.equals("green")){
+                    res += Math.pow((org[i][j].green - rest[i][j].green), 2);
+                }
+                if (color.equals("red")){
+                    res += Math.pow((org[i][j].red - rest[i][j].red), 2);
+                }
+            }
+        }
+        res = (width*height*Math.pow(255, 2)) / res;
+        res = 10*Math.log10(res);
+        return res;
+    }
+
+    public double avg4px(int[] nums){
+        double result = 0;
+        for (double d : nums) {
+            result += d;
+        }
+        return result / nums.length;
+    }
+
     public byte getBit(byte ID, int position)
     {
         return (byte) ((ID >> position) & 1);
@@ -153,4 +181,18 @@ public class ImageToolkit {
         }
         return (byte)Integer.parseInt(sb.toString(), 2);
     }
+
+    public double log2(double N)
+    {
+
+        // calculate log2 N indirectly
+        // using log() method
+
+        double result = (Math.log(N) / Math.log(2));
+        if (N == 0){
+            return 0;
+        }
+        return result;
+    }
+
 }
