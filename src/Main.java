@@ -1294,5 +1294,170 @@ public class Main {
         }
         H = H * -1;
         System.out.println("Entropy for Cr: " + H);
+
+        //---14---
+        double[] DRed = new double[((height-1)*(width-1))];
+        double[] DGreen = new double[((height-1)*(width-1))];
+        double[] DBlue = new double[((height-1)*(width-1))];
+        double[] DY = new double[((height-1)*(width-1))];
+        double[] DCb = new double[((height-1)*(width-1))];
+        double[] DCr = new double[((height-1)*(width-1))];
+
+        int c = 0;
+        for (int i = 1; i < height; i++){
+            for (int j = 1; j < width; j++){
+                DBlue[c] = mtx[i][j].blue - mtx[i][j-1].blue;
+                DGreen[c] = mtx[i][j].green - mtx[i][j-1].green;
+                DRed[c] = mtx[i][j].red - mtx[i][j-1].red;
+                DY[c] = YCbCrMtx[i][j].blue - YCbCrMtx[i][j-1].blue;
+                DCb[c] = YCbCrMtx[i][j].green - YCbCrMtx[i][j-1].green;
+                DCr[c] = YCbCrMtx[i][j].red - YCbCrMtx[i][j-1].red;
+                c++;
+            }
+        }
+
+        //--RED--
+        n = new int[256];
+        for (int x = 0; x < 256; x++){
+            for (int i = 0; i < DRed.length; i++){
+                if (DRed[i] == x){
+                    n[x] = n[x] + 1;
+                }
+            }
+        }
+
+        p = new double[256];
+        for (int i = 0; i < n.length; i++){
+            //System.out.println(i);
+            for (int j = 0; j < n[i]; j++){
+                p[i] = (double) n[i]/DRed.length;
+            }
+        }
+        H = 0;
+        for (int i = 0; i < 256; i++){
+            H += p[i]*tk.log2(p[i]);
+        }
+        H = H * -1;
+        System.out.println("Entropy for red(after DPCM): " + H);
+
+        //--GREEN--
+        n = new int[256];
+        for (int x = 0; x < 256; x++){
+            for (int i = 0; i < DGreen.length; i++){
+                if (DGreen[i] == x){
+                    n[x] = n[x] + 1;
+                }
+            }
+        }
+
+        p = new double[256];
+        for (int i = 0; i < n.length; i++){
+            //System.out.println(i);
+            for (int j = 0; j < n[i]; j++){
+                p[i] = (double) n[i]/DGreen.length;
+            }
+        }
+        H = 0;
+        for (int i = 0; i < 256; i++){
+            H += p[i]*tk.log2(p[i]);
+        }
+        H = H * -1;
+        System.out.println("Entropy for green(after DPCM): " + H);
+
+        //--Blue--
+        n = new int[256];
+        for (int x = 0; x < 256; x++){
+            for (int i = 0; i < DBlue.length; i++){
+                if (DBlue[i] == x){
+                    n[x] = n[x] + 1;
+                }
+            }
+        }
+
+        p = new double[256];
+        for (int i = 0; i < n.length; i++){
+            //System.out.println(i);
+            for (int j = 0; j < n[i]; j++){
+                p[i] = (double) n[i]/DBlue.length;
+            }
+        }
+        H = 0;
+        for (int i = 0; i < 256; i++){
+            H += p[i]*tk.log2(p[i]);
+        }
+        H = H * -1;
+        System.out.println("Entropy for blue(after DPCM): " + H);
+
+        //--Y--
+        n = new int[256];
+        for (int x = 0; x < 256; x++){
+            for (int i = 0; i < DY.length; i++){
+                if (DY[i] == x){
+                    n[x] = n[x] + 1;
+                }
+            }
+        }
+
+        p = new double[256];
+        for (int i = 0; i < n.length; i++){
+            //System.out.println(i);
+            for (int j = 0; j < n[i]; j++){
+                p[i] = (double) n[i]/DY.length;
+            }
+        }
+        H = 0;
+        for (int i = 0; i < 256; i++){
+            H += p[i]*tk.log2(p[i]);
+        }
+        H = H * -1;
+        System.out.println("Entropy for Y(after DPCM): " + H);
+
+        //--Cr--
+        n = new int[256];
+        for (int x = 0; x < 256; x++){
+            for (int i = 0; i < DCb.length; i++){
+                if (DCb[i] == x){
+                    n[x] = n[x] + 1;
+                }
+            }
+        }
+
+        p = new double[256];
+        for (int i = 0; i < n.length; i++){
+            //System.out.println(i);
+            for (int j = 0; j < n[i]; j++){
+                p[i] = (double) n[i]/DCb.length;
+            }
+        }
+        H = 0;
+        for (int i = 0; i < 256; i++){
+            H += p[i]*tk.log2(p[i]);
+        }
+        H = H * -1;
+        System.out.println("Entropy for Cb(after DPCM): " + H);
+
+        //--Cr--
+        n = new int[256];
+        for (int x = 0; x < 256; x++){
+            for (int i = 0; i < DCr.length; i++){
+                if (DCr[i] == x){
+                    n[x] = n[x] + 1;
+                }
+            }
+        }
+
+        p = new double[256];
+        for (int i = 0; i < n.length; i++){
+            //System.out.println(i);
+            for (int j = 0; j < n[i]; j++){
+                p[i] = (double) n[i]/DCr.length;
+            }
+        }
+        H = 0;
+        for (int i = 0; i < 256; i++){
+            H += p[i]*tk.log2(p[i]);
+        }
+        H = H * -1;
+        System.out.println("Entropy for Cr(after DPCM): " + H);
     }
 }
