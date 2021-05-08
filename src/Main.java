@@ -506,9 +506,17 @@ public class Main {
             mtx = new Pixel[height][width];
             for (int i = 0; i < height; i++) { //read certain byte of color
                 for (int j = 0; j < width; j++) {
-                    mtx[i][j] = new Pixel(tk.byteFromHighBit(z, tk.getBit((byte)YCbCrMtx[i][j].blue, z)),
-                            tk.byteFromHighBit(z, tk.getBit((byte)YCbCrMtx[i][j].blue, z)),
-                            tk.byteFromHighBit(z, tk.getBit((byte)YCbCrMtx[i][j].blue, z)));
+//                    mtx[i][j] = new Pixel(tk.byteFromHighBit(z, tk.getBit((byte)YCbCrMtx[i][j].blue, z)),
+//                            tk.byteFromHighBit(z, tk.getBit((byte)YCbCrMtx[i][j].blue, z)),
+//                            tk.byteFromHighBit(z, tk.getBit((byte)YCbCrMtx[i][j].blue, z)));
+//                    if (z == 0 && (tk.getBit((byte)YCbCrMtx[i][j].blue, z)) == Byte.parseByte("0", 2)){
+//                        //System.out.println("true");
+//                        mtx[i][j] = new Pixel(0, 0, 0);
+//                    } else {
+                    mtx[i][j] = new Pixel((int) (tk.getBit((byte)YCbCrMtx[i][j].blue, z) * Math.pow(2, 7 - z)) - 1,
+                            (int) (tk.getBit((byte)YCbCrMtx[i][j].blue, z) * Math.pow(2, 7 - z)) - 1,
+                            (int) (tk.getBit((byte)YCbCrMtx[i][j].blue, z) * Math.pow(2, 7 - z)) - 1);
+                    //}
                 }
 //            if (padding != 4){
 //                counter = counter + padding;
@@ -662,386 +670,367 @@ public class Main {
             System.out.println("bp6" + (i+7) + ": " + tk.correlation(bp6x[i], height, width, "blue", "green"));
         }
 
-        //---8.a---
-        Pixel[][] decMtx = new Pixel[height][width];
+        //---8.a && 11.a---
+        //--Cb--
+        Pixel[][] t = tk.decA(YCbCrMtx, height, width, 2);
+        Pixel[][] decCbMtx = new Pixel[height][width];
         for (int i = 0; i < height; i++){
             for (int j = 0; j < width; j++){
-                decMtx[i][j] = new Pixel(YCbCrMtx[i][j].green,
+                decCbMtx[i][j] = new Pixel(YCbCrMtx[i][j].green,
                         YCbCrMtx[i][j].green,
                         YCbCrMtx[i][j].green);
                 if ((i%2==0)&&(j%2==0)){
-                    decMtx[i][j].blue = 0;
-                    decMtx[i][j].green = 0;
-                    decMtx[i][j].red = 0;
+                    decCbMtx[i][j].blue = 0;
+                    decCbMtx[i][j].green = 0;
+                    decCbMtx[i][j].red = 0;
                 }
             }
         }
-        mtx = decMtx;
-        outImg = new byte[data.length]; //write header from copy
-        for (int i = 0; i < header.length; i++){
-            outImg[i] = header[i];
-        }
-        counter = offBits; //counter must write every byte to build pixel
-        buf = new byte[3];
-        for (int i = 0; i < height; i++){ //write image
-            for (int j = 0; j < width; j++){
-                buf = mtx[i][j].toByteArray();
-                outImg[counter] = buf[0];
-                counter++;
-                outImg[counter] = buf[1];
-                counter++;
-                outImg[counter] = buf[2];
-                counter++;
-            }
-            if (padding != 4){
-                counter = counter + padding;
-            }
-        }
-        bis = new ByteArrayInputStream(outImg);
-        imgOut = ImageIO.read(bis);
-        ImageIO.write(imgOut, "bmp", new File("images\\decCb.bmp"));
-
-        decMtx = new Pixel[height][width];
+        Pixel[][] dec4CbMtx = new Pixel[height][width];
         for (int i = 0; i < height; i++){
             for (int j = 0; j < width; j++){
-                decMtx[i][j] = new Pixel(YCbCrMtx[i][j].red,
+                dec4CbMtx[i][j] = new Pixel(YCbCrMtx[i][j].green,
+                        YCbCrMtx[i][j].green,
+                        YCbCrMtx[i][j].green);
+                if ((i%3==0)&&(j%3==0)&&(i > 1 && j > 1)){
+                    dec4CbMtx[i][j].blue = 0;
+                    dec4CbMtx[i-1][j].blue = 0;
+                    dec4CbMtx[i][j-1].blue = 0;
+                    dec4CbMtx[i-1][j-1].blue = 0;
+
+                    dec4CbMtx[i][j].green = 0;
+                    dec4CbMtx[i-1][j].green = 0;
+                    dec4CbMtx[i][j-1].green = 0;
+                    dec4CbMtx[i-1][j-1].green = 0;
+
+                    dec4CbMtx[i][j].red = 0;
+                    dec4CbMtx[i-1][j].red = 0;
+                    dec4CbMtx[i][j-1].red = 0;
+                    dec4CbMtx[i-1][j-1].red = 0;
+                }
+            }
+        }
+
+        //--Cr--
+        Pixel[][] decCrMtx = new Pixel[height][width];
+        for (int i = 0; i < height; i++){
+            for (int j = 0; j < width; j++){
+                decCrMtx[i][j] = new Pixel(YCbCrMtx[i][j].red,
                         YCbCrMtx[i][j].red,
                         YCbCrMtx[i][j].red);
                 if ((i%2==0)&&(j%2==0)){
-                    decMtx[i][j].blue = 0;
-                    decMtx[i][j].green = 0;
-                    decMtx[i][j].red = 0;
+                    decCrMtx[i][j].blue = 0;
+                    decCrMtx[i][j].green = 0;
+                    decCrMtx[i][j].red = 0;
                 }
             }
         }
-        mtx = decMtx;
-        outImg = new byte[data.length]; //write header from copy
-        for (int i = 0; i < header.length; i++){
-            outImg[i] = header[i];
-        }
-        counter = offBits; //counter must write every byte to build pixel
-        buf = new byte[3];
-        for (int i = 0; i < height; i++){ //write image
-            for (int j = 0; j < width; j++){
-                buf = mtx[i][j].toByteArray();
-                outImg[counter] = buf[0];
-                counter++;
-                outImg[counter] = buf[1];
-                counter++;
-                outImg[counter] = buf[2];
-                counter++;
-            }
-            if (padding != 4){
-                counter = counter + padding;
-            }
-        }
-        bis = new ByteArrayInputStream(outImg);
-        imgOut = ImageIO.read(bis);
-        ImageIO.write(imgOut, "bmp", new File("images\\decCr.bmp"));
-
-        //---8.b---
-        decMtx = new Pixel[height][width];
+        Pixel[][] dec4CrMtx = new Pixel[height][width];
         for (int i = 0; i < height; i++){
             for (int j = 0; j < width; j++){
-                decMtx[i][j] = new Pixel(YCbCrMtx[i][j].blue,
-                        YCbCrMtx[i][j].green,
+                dec4CrMtx[i][j] = new Pixel(YCbCrMtx[i][j].red,
+                        YCbCrMtx[i][j].red,
                         YCbCrMtx[i][j].red);
+                if ((i%3==0)&&(j%3==0)&&(i > 1 && j > 1)){
+                    dec4CrMtx[i][j].blue = 0;
+                    dec4CrMtx[i-1][j].blue = 0;
+                    dec4CrMtx[i][j-1].blue = 0;
+                    dec4CrMtx[i-1][j-1].blue = 0;
+
+                    dec4CrMtx[i][j].green = 0;
+                    dec4CrMtx[i-1][j].green = 0;
+                    dec4CrMtx[i][j-1].green = 0;
+                    dec4CrMtx[i-1][j-1].green = 0;
+
+                    dec4CrMtx[i][j].red = 0;
+                    dec4CrMtx[i-1][j].red = 0;
+                    dec4CrMtx[i][j-1].red = 0;
+                    dec4CrMtx[i-1][j-1].red = 0;
+                }
+            }
+        }
+
+        //---8.b---
+        //--Cb--
+        Pixel[][] decCbAvgMtx = new Pixel[height][width];
+        for (int i = 0; i < height; i++){
+            for (int j = 0; j < width; j++){
+                decCbAvgMtx[i][j] = new Pixel(YCbCrMtx[i][j].green,
+                        YCbCrMtx[i][j].green,
+                        YCbCrMtx[i][j].green);
                 if ((i%2==0)&&(j%2==0)&&(i + 1 < height || i + 1 == height)&&
                         (j + 1 < width || j + 1 == width) && (i - 1 > 0 || i - 1 == 0) &&
                         (j - 1 > 0 || j - 1 == 0))
                 {
-                    decMtx[i][j].green = (int)tk.avg4px(new int[]{YCbCrMtx[i - 1][j].green,
+                    decCbAvgMtx[i][j].green = (int)tk.avg4px(new int[]{YCbCrMtx[i - 1][j].green,
                             YCbCrMtx[i][j - 1].green,
                             YCbCrMtx[i + 1][j].green,
                             YCbCrMtx[i][j + 1].green});
-                    decMtx[i][j].red = (int)tk.avg4px(new int[] {YCbCrMtx[i - 1][j].red,
-                            YCbCrMtx[i][j - 1].red,
-                            YCbCrMtx[i + 1][j].red,
-                            YCbCrMtx[i][j + 1].red});
+//                    decCbAvgMtx[i][j].red = (int)tk.avg4px(new int[] {YCbCrMtx[i - 1][j].red,
+//                            YCbCrMtx[i][j - 1].red,
+//                            YCbCrMtx[i + 1][j].red,
+//                            YCbCrMtx[i][j + 1].red});
                 }
             }
         }
-        G = 0;
-        R = 0;
-        B = 0;
-        mtx = new Pixel[height][width];
-        counter = offBits; // [blue byte, green byte, red byte, ...]
-        for (int i = 0; i < height; i++){ //read certain byte of color
-            for (int j = 0; j < width; j++){
-                G = (double)decMtx[i][j].blue - 0.714*(double)(decMtx[i][j].red - 128) - 0.334*(double)(decMtx[i][j].green - 128);
-                R = (double)decMtx[i][j].blue + 1.402*(double)(decMtx[i][j].red - 128);
-                B = (double)decMtx[i][j].blue + 1.772*(double)(decMtx[i][j].green - 128);
-                if (G > maxGreen){
-                    G = maxGreen;
-                }
-                if (G < minGreen){
-                    G = minGreen;
-                }
-
-                if (R > maxRed){
-                    R = maxRed;
-                }
-                if (R < minRed){
-                    R = minRed;
-                }
-
-                if (B > maxBlue){
-                    B = maxBlue;
-                }
-                if (B < minBlue){
-                    B = minBlue;
-                }
-                mtx[i][j] = new Pixel((int)B, (int)G, (int)R);
-                //RGB BGR
-                //GBR BRG
-                //GRB RBG
-                counter += 3;
-//                System.out.println(R + " " + minRed + maxRed);
-//                System.out.println(G + " " + minGreen + maxGreen);
-//                System.out.println(B + " " + minBlue + maxBlue);
-//                break mainLoop;
-            }
-            if (padding != 4){
-                counter = counter + padding;
-            }
-        }
-        Pixel[][] decRestMtx = mtx;
-        outImg = new byte[data.length]; //write header from copy
-        for (int i = 0; i < header.length; i++){
-            outImg[i] = header[i];
-        }
-        counter = offBits; //counter must write every byte to build pixel
-        buf = new byte[3];
-        for (int i = 0; i < height; i++){ //write image
-            for (int j = 0; j < width; j++){
-                buf = mtx[i][j].toByteArray();
-                outImg[counter] = buf[0];
-                counter++;
-                outImg[counter] = buf[1];
-                counter++;
-                outImg[counter] = buf[2];
-                counter++;
-            }
-            if (padding != 4){
-                counter = counter + padding;
-            }
-        }
-        bis = new ByteArrayInputStream(outImg);
-        imgOut = ImageIO.read(bis);
-        ImageIO.write(imgOut, "bmp", new File("images\\decAvgCbCr.bmp"));
-
-        //---9---
-        decMtx = new Pixel[height][width];
+        Pixel[][] dec4CbAvgMtx = new Pixel[height][width];
         for (int i = 0; i < height; i++){
             for (int j = 0; j < width; j++){
-                decMtx[i][j] = new Pixel(YCbCrMtx[i][j].blue,
-                        YCbCrMtx[i][j].green,
-                        YCbCrMtx[i][j].red);
-                if ((i%2==0)&&(j%2==0)&&(j > 1 || j == 1)){
-                    decMtx[i][j].green = decMtx[i][j - 1].green;
-                    decMtx[i][j].red = decMtx[i][j - 1].red;
-                }
-            }
-        }
-
-        //mtx = decMtx;
-        G = 0;
-        R = 0;
-        B = 0;
-        mtx = new Pixel[height][width];
-        counter = offBits; // [blue byte, green byte, red byte, ...]
-        for (int i = 0; i < height; i++){ //read certain byte of color
-            for (int j = 0; j < width; j++){
-                G = (double)decMtx[i][j].blue - 0.714*(double)(decMtx[i][j].red - 128) - 0.334*(double)(decMtx[i][j].green - 128);
-                R = (double)decMtx[i][j].blue + 1.402*(double)(decMtx[i][j].red - 128);
-                B = (double)decMtx[i][j].blue + 1.772*(double)(decMtx[i][j].green - 128);
-                if (G > maxGreen){
-                    G = maxGreen;
-                }
-                if (G < minGreen){
-                    G = minGreen;
-                }
-
-                if (R > maxRed){
-                    R = maxRed;
-                }
-                if (R < minRed){
-                    R = minRed;
-                }
-
-                if (B > maxBlue){
-                    B = maxBlue;
-                }
-                if (B < minBlue){
-                    B = minBlue;
-                }
-                mtx[i][j] = new Pixel((int)B, (int)G, (int)R);
-                //RGB BGR
-                //GBR BRG
-                //GRB RBG
-                counter += 3;
-//                System.out.println(R + " " + minRed + maxRed);
-//                System.out.println(G + " " + minGreen + maxGreen);
-//                System.out.println(B + " " + minBlue + maxBlue);
-//                break mainLoop;
-            }
-            if (padding != 4){
-                counter = counter + padding;
-            }
-        }
-
-        outImg = new byte[data.length]; //write header from copy
-        for (int i = 0; i < header.length; i++){
-            outImg[i] = header[i];
-        }
-        counter = offBits; //counter must write every byte to build pixel
-        buf = new byte[3];
-        for (int i = 0; i < height; i++){ //write image
-            for (int j = 0; j < width; j++){
-                buf = mtx[i][j].toByteArray();
-                outImg[counter] = buf[0];
-                counter++;
-                outImg[counter] = buf[1];
-                counter++;
-                outImg[counter] = buf[2];
-                counter++;
-            }
-            if (padding != 4){
-                counter = counter + padding;
-            }
-        }
-        bis = new ByteArrayInputStream(outImg);
-        imgOut = ImageIO.read(bis);
-        ImageIO.write(imgOut, "bmp", new File("images\\decRestored.bmp"));
-
-        System.out.println("PSNR(original Cb and decRest Cb): " + tk.psnr(orgCbMtx, decMtx, height, width, "green"));
-        System.out.println("PSNR(original Cr and decRest Cr): " + tk.psnr(orgCrMtx, decMtx, height, width, "red"));
-        System.out.println("PSNR(original Blue and decRest Blue): " + tk.psnr(orgMtx, decRestMtx, height, width, "blue"));
-        System.out.println("PSNR(original Green and decRest Green): " + tk.psnr(orgMtx, decRestMtx, height, width, "green"));
-        System.out.println("PSNR(original Red and decRest Red): " + tk.psnr(orgMtx, decRestMtx, height, width, "red"));
-
-        decMtx = new Pixel[height][width];
-        for (int i = 0; i < height; i++){
-            for (int j = 0; j < width; j++){
-                decMtx[i][j] = new Pixel(YCbCrMtx[i][j].green,
+                dec4CbAvgMtx[i][j] = new Pixel(YCbCrMtx[i][j].green,
                         YCbCrMtx[i][j].green,
                         YCbCrMtx[i][j].green);
+                if ((i + 1 < height /*|| i + 1 == height*/)&&
+                        (j + 1 < width /*|| j + 1 == width*/) && (i - 1 > 0 || i - 1 == 0) &&
+                        (j - 1 > 0 || j - 1 == 0)){
+                    dec4CbAvgMtx[i][j].green = (int)tk.avg4px(new int[]{YCbCrMtx[i - 1][j].green,
+                            YCbCrMtx[i][j - 1].green,
+                            YCbCrMtx[i + 1][j].green,
+                            YCbCrMtx[i][j + 1].green});
+                }
                 if ((i%3==0)&&(j%3==0)&&(i > 1 && j > 1)){
-                    decMtx[i][j].blue = 0;
-                    decMtx[i-1][j].blue = 0;
-                    decMtx[i][j-1].blue = 0;
-                    decMtx[i-1][j-1].blue = 0;
+                    dec4CbAvgMtx[i][j].blue = 0;
+                    dec4CbAvgMtx[i-1][j].blue = 0;
+                    dec4CbAvgMtx[i][j-1].blue = 0;
+                    dec4CbAvgMtx[i-1][j-1].blue = 0;
 
-                    decMtx[i][j].green = 0;
-                    decMtx[i-1][j].green = 0;
-                    decMtx[i][j-1].green = 0;
-                    decMtx[i-1][j-1].green = 0;
+                    dec4CbAvgMtx[i][j].green = 0;
+                    dec4CbAvgMtx[i-1][j].green = 0;
+                    dec4CbAvgMtx[i][j-1].green = 0;
+                    dec4CbAvgMtx[i-1][j-1].green = 0;
 
-                    decMtx[i][j].red = 0;
-                    decMtx[i-1][j].red = 0;
-                    decMtx[i][j-1].red = 0;
-                    decMtx[i-1][j-1].red = 0;
+                    dec4CbAvgMtx[i][j].red = 0;
+                    dec4CbAvgMtx[i-1][j].red = 0;
+                    dec4CbAvgMtx[i][j-1].red = 0;
+                    dec4CbAvgMtx[i-1][j-1].red = 0;
                 }
             }
         }
 
-        mtx = decMtx;
-        outImg = new byte[data.length]; //write header from copy
-        for (int i = 0; i < header.length; i++){
-            outImg[i] = header[i];
-        }
-        counter = offBits; //counter must write every byte to build pixel
-        buf = new byte[3];
-        for (int i = 0; i < height; i++){ //write image
-            for (int j = 0; j < width; j++){
-                buf = mtx[i][j].toByteArray();
-                outImg[counter] = buf[0];
-                counter++;
-                outImg[counter] = buf[1];
-                counter++;
-                outImg[counter] = buf[2];
-                counter++;
-            }
-            if (padding != 4){
-                counter = counter + padding;
-            }
-        }
-        bis = new ByteArrayInputStream(outImg);
-        imgOut = ImageIO.read(bis);
-        ImageIO.write(imgOut, "bmp", new File("images\\dec4Cb.bmp"));
-
-        decMtx = new Pixel[height][width];
+        //--Cr--
+        Pixel[][] decCrAvgMtx = new Pixel[height][width];
         for (int i = 0; i < height; i++){
             for (int j = 0; j < width; j++){
-                decMtx[i][j] = new Pixel(YCbCrMtx[i][j].red,
-                        YCbCrMtx[i][j].red,
-                        YCbCrMtx[i][j].red);
-                if ((i%3==0)&&(j%3==0)&&(i > 1 && j > 1)){
-                    decMtx[i][j].blue = 0;
-                    decMtx[i-1][j].blue = 0;
-                    decMtx[i][j-1].blue = 0;
-                    decMtx[i-1][j-1].blue = 0;
-
-                    decMtx[i][j].green = 0;
-                    decMtx[i-1][j].green = 0;
-                    decMtx[i][j-1].green = 0;
-                    decMtx[i-1][j-1].green = 0;
-
-                    decMtx[i][j].red = 0;
-                    decMtx[i-1][j].red = 0;
-                    decMtx[i][j-1].red = 0;
-                    decMtx[i-1][j-1].red = 0;
-                }
-            }
-        }
-        mtx = decMtx;
-        outImg = new byte[data.length]; //write header from copy
-        for (int i = 0; i < header.length; i++){
-            outImg[i] = header[i];
-        }
-        counter = offBits; //counter must write every byte to build pixel
-        buf = new byte[3];
-        for (int i = 0; i < height; i++){ //write image
-            for (int j = 0; j < width; j++){
-                buf = mtx[i][j].toByteArray();
-                outImg[counter] = buf[0];
-                counter++;
-                outImg[counter] = buf[1];
-                counter++;
-                outImg[counter] = buf[2];
-                counter++;
-            }
-            if (padding != 4){
-                counter = counter + padding;
-            }
-        }
-        bis = new ByteArrayInputStream(outImg);
-        imgOut = ImageIO.read(bis);
-        ImageIO.write(imgOut, "bmp", new File("images\\dec4Cr.bmp"));
-
-        decMtx = new Pixel[height][width];
-        for (int i = 0; i < height; i++){
-            for (int j = 0; j < width; j++){
-                decMtx[i][j] = new Pixel(YCbCrMtx[i][j].blue,
+                decCrAvgMtx[i][j] = new Pixel(YCbCrMtx[i][j].green,
                         YCbCrMtx[i][j].green,
-                        YCbCrMtx[i][j].red);
-//                if ((i%2==0)&&(j%2==0)&&(j > 1 || j == 1)){
-//                    decMtx[i][j].green = decMtx[i][j - 1].green;
-//                    decMtx[i][j].red = decMtx[i][j - 1].red;
-//                }
-                if ((i%3==0)&&(j%3==0)&&(i > 2 && j > 2)){
-                    decMtx[i][j].green = YCbCrMtx[i][j+1].green;
-                    decMtx[i-1][j].green = YCbCrMtx[i-1][j+1].green;
-                    decMtx[i][j-1].green = YCbCrMtx[i][j-2].green;
-                    decMtx[i-1][j-1].green = YCbCrMtx[i-1][j-2].green;
-
-                    decMtx[i][j].red = YCbCrMtx[i][j+1].red;
-                    decMtx[i-1][j].red = YCbCrMtx[i-1][j+1].red;
-                    decMtx[i][j-1].red = YCbCrMtx[i][j-2].red;
-                    decMtx[i-1][j-1].red = YCbCrMtx[i-1][j-2].red;
+                        YCbCrMtx[i][j].green);
+                if ((i%2==0)&&(j%2==0)&&(i + 1 < height || i + 1 == height)&&
+                        (j + 1 < width || j + 1 == width) && (i - 1 > 0 || i - 1 == 0) &&
+                        (j - 1 > 0 || j - 1 == 0))
+                {
+                    decCrAvgMtx[i][j].green = (int)tk.avg4px(new int[]{YCbCrMtx[i - 1][j].green,
+                            YCbCrMtx[i][j - 1].green,
+                            YCbCrMtx[i + 1][j].green,
+                            YCbCrMtx[i][j + 1].green});
+//                    decCbAvgMtx[i][j].red = (int)tk.avg4px(new int[] {YCbCrMtx[i - 1][j].red,
+//                            YCbCrMtx[i][j - 1].red,
+//                            YCbCrMtx[i + 1][j].red,
+//                            YCbCrMtx[i][j + 1].red});
                 }
             }
         }
+        Pixel[][] dec4CrAvgMtx = new Pixel[height][width];
+        for (int i = 0; i < height; i++){
+            for (int j = 0; j < width; j++){
+                dec4CrAvgMtx[i][j] = new Pixel(YCbCrMtx[i][j].green,
+                        YCbCrMtx[i][j].green,
+                        YCbCrMtx[i][j].green);
+                if ((i + 1 < height /*|| i + 1 == height*/)&&
+                        (j + 1 < width /*|| j + 1 == width*/) && (i - 1 > 0 || i - 1 == 0) &&
+                        (j - 1 > 0 || j - 1 == 0)){
+                    dec4CrAvgMtx[i][j].green = (int)tk.avg4px(new int[]{YCbCrMtx[i - 1][j].green,
+                            YCbCrMtx[i][j - 1].green,
+                            YCbCrMtx[i + 1][j].green,
+                            YCbCrMtx[i][j + 1].green});
+                }
+                if ((i%3==0)&&(j%3==0)&&(i > 1 && j > 1)){
+                    dec4CrAvgMtx[i][j].blue = 0;
+                    dec4CrAvgMtx[i-1][j].blue = 0;
+                    dec4CrAvgMtx[i][j-1].blue = 0;
+                    dec4CrAvgMtx[i-1][j-1].blue = 0;
+
+                    dec4CrAvgMtx[i][j].green = 0;
+                    dec4CrAvgMtx[i-1][j].green = 0;
+                    dec4CrAvgMtx[i][j-1].green = 0;
+                    dec4CrAvgMtx[i-1][j-1].green = 0;
+
+                    dec4CrAvgMtx[i][j].red = 0;
+                    dec4CrAvgMtx[i-1][j].red = 0;
+                    dec4CrAvgMtx[i][j-1].red = 0;
+                    dec4CrAvgMtx[i-1][j-1].red = 0;
+                }
+            }
+        }
+
+
+        //---9---
+
+        Pixel[][][] mtxArr = new Pixel[8][height][width];
+        mtxArr[0] = decCbMtx;
+        mtxArr[1] = decCrMtx;
+        mtxArr[2] = decCbAvgMtx;
+        mtxArr[3] = decCrAvgMtx;
+
+        mtxArr[4] = dec4CbMtx;
+        mtxArr[5] = dec4CrMtx;
+        mtxArr[6] = dec4CbAvgMtx;
+        mtxArr[7] = dec4CrAvgMtx;
+
+        for (int z = 0; z < 8; z = z + 2) {
+            restMtx = new Pixel[height][width];
+            for (int i = 0; i < height; i++){
+                for (int j = 0; j < width; j++){
+                    restMtx[i][j] = new Pixel(YCbCrMtx[i][j].blue, mtxArr[z][i][j].green, mtxArr[z + 1][i][j].red);
+                    if ((i > 0 && j > 0) && (restMtx[i][j].green == 0 || restMtx[i][j].red == 0)) {
+                        restMtx[i][j] = new Pixel(YCbCrMtx[i][j].blue, mtxArr[z][i][j - 1].green, mtxArr[z + 1][i][j - 1].red);
+                    } else {
+                        restMtx[i][j] = new Pixel(YCbCrMtx[i][j].blue, YCbCrMtx[i][j].green, YCbCrMtx[i][j].red);
+                    }
+
+//                    if (z <= 3) {
+//                        restMtx[i][j] = new Pixel(YCbCrMtx[i][j].blue, mtxArr[z][i][j].green, mtxArr[z + 1][i][j].red);
+//                        if ((i%2==0)&&(j%2==0)&&(i + 1 < height || i + 1 == height)&&
+//                                (j + 1 < width || j + 1 == width) && (i - 1 > 0 || i - 1 == 0) &&
+//                                (j - 1 > 0 || j - 1 == 0)/*mtxArr[z][i][j].green == 0 && mtxArr[z][i][j].red == 0 && j > 0*/) {
+//                            restMtx[i][j] = new Pixel(YCbCrMtx[i][j].blue, mtxArr[z][i][j - 1].green, mtxArr[z + 1][i][j - 1].red);
+//                        }
+//                    } else if ((i%3==0)&&(j%3==0)&&(i > 1 && j > 1)){
+//                        restMtx[i][j] = new Pixel(YCbCrMtx[i][j].blue, mtxArr[z][i][j - 1].green, mtxArr[z + 1][i][j - 1].red);
+//                        restMtx[i][j+1] = new Pixel(YCbCrMtx[i][j+1].blue, mtxArr[z][i][j].green, mtxArr[z + 1][i][j].red);
+//                        restMtx[i+1][j] = new Pixel(YCbCrMtx[i+1][j].blue, mtxArr[z][i+1][j - 1].green, mtxArr[z + 1][i+1][j - 1].red);
+//                        restMtx[i+1][j+1] = new Pixel(YCbCrMtx[i+1][j+1].blue, mtxArr[z][i+1][j].green, mtxArr[z + 1][i+1][j].red);
+//                    }
+                }
+            }
+            //mtx = decMtx;
+            G = 0;
+            R = 0;
+            B = 0;
+            mtx = new Pixel[height][width];
+            counter = offBits; // [blue byte, green byte, red byte, ...]
+            for (int i = 0; i < height; i++) { //read certain byte of color
+                for (int j = 0; j < width; j++) {
+                    G = (double) restMtx[i][j].blue - 0.714 * (double) (restMtx[i][j].red - 128) - 0.334 * (double) (restMtx[i][j].green - 128);
+                    R = (double) restMtx[i][j].blue + 1.402 * (double) (restMtx[i][j].red - 128);
+                    B = (double) restMtx[i][j].blue + 1.772 * (double) (restMtx[i][j].green - 128);
+                    if (G > maxGreen) {
+                        G = maxGreen;
+                    }
+                    if (G < minGreen) {
+                        G = minGreen;
+                    }
+
+                    if (R > maxRed) {
+                        R = maxRed;
+                    }
+                    if (R < minRed) {
+                        R = minRed;
+                    }
+
+                    if (B > maxBlue) {
+                        B = maxBlue;
+                    }
+                    if (B < minBlue) {
+                        B = minBlue;
+                    }
+                    mtx[i][j] = new Pixel((int) B, (int) G, (int) R);
+                    //RGB BGR
+                    //GBR BRG
+                    //GRB RBG
+                    counter += 3;
+//                System.out.println(R + " " + minRed + maxRed);
+//                System.out.println(G + " " + minGreen + maxGreen);
+//                System.out.println(B + " " + minBlue + maxBlue);
+//                break mainLoop;
+                }
+                if (padding != 4) {
+                    counter = counter + padding;
+                }
+            }
+
+            outImg = new byte[data.length]; //write header from copy
+            for (int i = 0; i < header.length; i++) {
+                outImg[i] = header[i];
+            }
+            counter = offBits; //counter must write every byte to build pixel
+            buf = new byte[3];
+            for (int i = 0; i < height; i++) { //write image
+                for (int j = 0; j < width; j++) {
+                    buf = mtx[i][j].toByteArray();
+                    outImg[counter] = buf[0];
+                    counter++;
+                    outImg[counter] = buf[1];
+                    counter++;
+                    outImg[counter] = buf[2];
+                    counter++;
+                }
+                if (padding != 4) {
+                    counter = counter + padding;
+                }
+            }
+            bis = new ByteArrayInputStream(outImg);
+            imgOut = ImageIO.read(bis);
+            if (z == 0) {
+                ImageIO.write(imgOut, "bmp", new File("images\\dec-8.a-Rest.bmp"));
+                System.out.println("---8.a---");
+                System.out.println("PSNR(original Cb and decRest Cb): " + tk.psnr(orgCbMtx, restMtx, height, width, "green"));
+                System.out.println("PSNR(original Cr and decRest Cr): " + tk.psnr(orgCrMtx, restMtx, height, width, "red"));
+                System.out.println("PSNR(original Blue and decRest Blue): " + tk.psnr(orgMtx, mtx, height, width, "blue"));
+                System.out.println("PSNR(original Green and decRest Green): " + tk.psnr(orgMtx, mtx, height, width, "green"));
+                System.out.println("PSNR(original Red and decRest Red): " + tk.psnr(orgMtx, mtx, height, width, "red"));
+            }
+            if (z == 2) {
+                ImageIO.write(imgOut, "bmp", new File("images\\dec4-8.a-Rest.bmp"));
+                System.out.println("---8.a for 4---");
+                System.out.println("PSNR(original Cb and decRest Cb): " + tk.psnr(orgCbMtx, restMtx, height, width, "green"));
+                System.out.println("PSNR(original Cr and decRest Cr): " + tk.psnr(orgCrMtx, restMtx, height, width, "red"));
+                System.out.println("PSNR(original Blue and decRest Blue): " + tk.psnr(orgMtx, mtx, height, width, "blue"));
+                System.out.println("PSNR(original Green and decRest Green): " + tk.psnr(orgMtx, mtx, height, width, "green"));
+                System.out.println("PSNR(original Red and decRest Red): " + tk.psnr(orgMtx, mtx, height, width, "red"));
+            }
+            if (z == 4) {
+                System.out.println("---8.b---");
+                System.out.println("PSNR(original Cb and decRest Cb): " + tk.psnr(orgCbMtx, restMtx, height, width, "green"));
+                System.out.println("PSNR(original Cr and decRest Cr): " + tk.psnr(orgCrMtx, restMtx, height, width, "red"));
+                System.out.println("PSNR(original Blue and decRest Blue): " + tk.psnr(orgMtx, mtx, height, width, "blue"));
+                System.out.println("PSNR(original Green and decRest Green): " + tk.psnr(orgMtx, mtx, height, width, "green"));
+                System.out.println("PSNR(original Red and decRest Red): " + tk.psnr(orgMtx, mtx, height, width, "red"));
+                ImageIO.write(imgOut, "bmp", new File("images\\dec-8.b-Rest.bmp"));
+            }
+            if (z == 6) {
+                System.out.println("---8.b for 4---");
+                System.out.println("PSNR(original Cb and decRest Cb): " + tk.psnr(orgCbMtx, restMtx, height, width, "green"));
+                System.out.println("PSNR(original Cr and decRest Cr): " + tk.psnr(orgCrMtx, restMtx, height, width, "red"));
+                System.out.println("PSNR(original Blue and decRest Blue): " + tk.psnr(orgMtx, mtx, height, width, "blue"));
+                System.out.println("PSNR(original Green and decRest Green): " + tk.psnr(orgMtx, mtx, height, width, "green"));
+                System.out.println("PSNR(original Red and decRest Red): " + tk.psnr(orgMtx, mtx, height, width, "red"));
+                ImageIO.write(imgOut, "bmp", new File("images\\dec4-8.b-Rest.bmp"));
+            }
+        }
+
+
+//        decMtx = new Pixel[height][width];
+//        for (int i = 0; i < height; i++){
+//            for (int j = 0; j < width; j++){
+//                decMtx[i][j] = new Pixel(YCbCrMtx[i][j].blue,
+//                        YCbCrMtx[i][j].green,
+//                        YCbCrMtx[i][j].red);
+////                if ((i%2==0)&&(j%2==0)&&(j > 1 || j == 1)){
+////                    decMtx[i][j].green = decMtx[i][j - 1].green;
+////                    decMtx[i][j].red = decMtx[i][j - 1].red;
+////                }
+//                if ((i%3==0)&&(j%3==0)&&(i > 2 && j > 2)){
+//                    decMtx[i][j].green = YCbCrMtx[i][j+1].green;
+//                    decMtx[i-1][j].green = YCbCrMtx[i-1][j+1].green;
+//                    decMtx[i][j-1].green = YCbCrMtx[i][j-2].green;
+//                    decMtx[i-1][j-1].green = YCbCrMtx[i-1][j-2].green;
+//
+//                    decMtx[i][j].red = YCbCrMtx[i][j+1].red;
+//                    decMtx[i-1][j].red = YCbCrMtx[i-1][j+1].red;
+//                    decMtx[i][j-1].red = YCbCrMtx[i][j-2].red;
+//                    decMtx[i-1][j-1].red = YCbCrMtx[i-1][j-2].red;
+//                }
+//            }
+//        }
 
 //        Pixel[][] dec4Mtx = new Pixel[height][width];
 //        for (int i = 0; i < height; i++){
@@ -1050,82 +1039,6 @@ public class Main {
 //            }
 //        }
 
-        //mtx = decMtx;
-        G = 0;
-        R = 0;
-        B = 0;
-        mtx = new Pixel[height][width];
-        counter = offBits; // [blue byte, green byte, red byte, ...]
-        for (int i = 0; i < height; i++){ //read certain byte of color
-            for (int j = 0; j < width; j++){
-                G = (double)decMtx[i][j].blue - 0.714*(double)(decMtx[i][j].red - 128) - 0.334*(double)(decMtx[i][j].green - 128);
-                R = (double)decMtx[i][j].blue + 1.402*(double)(decMtx[i][j].red - 128);
-                B = (double)decMtx[i][j].blue + 1.772*(double)(decMtx[i][j].green - 128);
-                if (G > maxGreen){
-                    G = maxGreen;
-                }
-                if (G < minGreen){
-                    G = minGreen;
-                }
-
-                if (R > maxRed){
-                    R = maxRed;
-                }
-                if (R < minRed){
-                    R = minRed;
-                }
-
-                if (B > maxBlue){
-                    B = maxBlue;
-                }
-                if (B < minBlue){
-                    B = minBlue;
-                }
-                mtx[i][j] = new Pixel((int)B, (int)G, (int)R);
-                //RGB BGR
-                //GBR BRG
-                //GRB RBG
-                counter += 3;
-//                System.out.println(R + " " + minRed + maxRed);
-//                System.out.println(G + " " + minGreen + maxGreen);
-//                System.out.println(B + " " + minBlue + maxBlue);
-//                break mainLoop;
-            }
-            if (padding != 4){
-                counter = counter + padding;
-            }
-        }
-
-        decRestMtx = mtx;
-        outImg = new byte[data.length]; //write header from copy
-        for (int i = 0; i < header.length; i++){
-            outImg[i] = header[i];
-        }
-        counter = offBits; //counter must write every byte to build pixel
-        buf = new byte[3];
-        for (int i = 0; i < height; i++){ //write image
-            for (int j = 0; j < width; j++){
-                buf = mtx[i][j].toByteArray();
-                outImg[counter] = buf[0];
-                counter++;
-                outImg[counter] = buf[1];
-                counter++;
-                outImg[counter] = buf[2];
-                counter++;
-            }
-            if (padding != 4){
-                counter = counter + padding;
-            }
-        }
-        bis = new ByteArrayInputStream(outImg);
-        imgOut = ImageIO.read(bis);
-        ImageIO.write(imgOut, "bmp", new File("images\\dec4Restored.bmp"));
-
-        System.out.println("\nPSNR(original Cb and dec4Rest Cb): " + tk.psnr(orgCbMtx, decMtx, height, width, "green"));
-        System.out.println("PSNR(original Cr and dec4Rest Cr): " + tk.psnr(orgCrMtx, decMtx, height, width, "red"));
-        System.out.println("PSNR(original Blue and dec4Rest Blue): " + tk.psnr(orgMtx, decRestMtx, height, width, "blue"));
-        System.out.println("PSNR(original Green and dec4Rest Green): " + tk.psnr(orgMtx, decRestMtx, height, width, "green"));
-        System.out.println("PSNR(original Red and dec4Rest Red): " + tk.psnr(orgMtx, decRestMtx, height, width, "red"));
 
         //---13---
 
@@ -1296,168 +1209,42 @@ public class Main {
         System.out.println("Entropy for Cr: " + H);
 
         //---14---
-        double[] DRed = new double[((height-1)*(width-1))];
-        double[] DGreen = new double[((height-1)*(width-1))];
-        double[] DBlue = new double[((height-1)*(width-1))];
-        double[] DY = new double[((height-1)*(width-1))];
-        double[] DCb = new double[((height-1)*(width-1))];
-        double[] DCr = new double[((height-1)*(width-1))];
-
-        int c = 0;
-        for (int i = 1; i < height; i++){
-            for (int j = 1; j < width; j++){
-                DBlue[c] = mtx[i][j].blue - mtx[i][j-1].blue;
-                DGreen[c] = mtx[i][j].green - mtx[i][j-1].green;
-                DRed[c] = mtx[i][j].red - mtx[i][j-1].red;
-                DY[c] = YCbCrMtx[i][j].blue - YCbCrMtx[i][j-1].blue;
-                DCb[c] = YCbCrMtx[i][j].green - YCbCrMtx[i][j-1].green;
-                DCr[c] = YCbCrMtx[i][j].red - YCbCrMtx[i][j-1].red;
-                c++;
-            }
-        }
 
         //--RED--
-        n = new int[256];
-        for (int x = 0; x < 256; x++){
-            for (int i = 0; i < DRed.length; i++){
-                if (DRed[i] == x){
-                    n[x] = n[x] + 1;
-                }
-            }
-        }
-
-        p = new double[256];
-        for (int i = 0; i < n.length; i++){
-            //System.out.println(i);
-            for (int j = 0; j < n[i]; j++){
-                p[i] = (double) n[i]/DRed.length;
-            }
-        }
-        H = 0;
-        for (int i = 0; i < 256; i++){
-            H += p[i]*tk.log2(p[i]);
-        }
-        H = H * -1;
-        System.out.println("Entropy for red(after DPCM): " + H);
+        System.out.println("\nEntropy for red(after DPCM mode 1): " + tk.DPCM(mtx, height, width, "red", 1));
+        System.out.println("Entropy for red(after DPCM mode 2): " + tk.DPCM(mtx, height, width, "red", 2));
+        System.out.println("Entropy for red(after DPCM mode 3): " + tk.DPCM(mtx, height, width, "red", 3));
+        System.out.println("Entropy for red(after DPCM mode 4): " + tk.DPCM(mtx, height, width, "red", 4));
 
         //--GREEN--
-        n = new int[256];
-        for (int x = 0; x < 256; x++){
-            for (int i = 0; i < DGreen.length; i++){
-                if (DGreen[i] == x){
-                    n[x] = n[x] + 1;
-                }
-            }
-        }
-
-        p = new double[256];
-        for (int i = 0; i < n.length; i++){
-            //System.out.println(i);
-            for (int j = 0; j < n[i]; j++){
-                p[i] = (double) n[i]/DGreen.length;
-            }
-        }
-        H = 0;
-        for (int i = 0; i < 256; i++){
-            H += p[i]*tk.log2(p[i]);
-        }
-        H = H * -1;
-        System.out.println("Entropy for green(after DPCM): " + H);
+        System.out.println("\nEntropy for green(after DPCM mode 1): " + tk.DPCM(mtx, height, width, "green", 1));
+        System.out.println("Entropy for green(after DPCM mode 2): " + tk.DPCM(mtx, height, width, "green", 2));
+        System.out.println("Entropy for green(after DPCM mode 3): " + tk.DPCM(mtx, height, width, "green", 3));
+        System.out.println("Entropy for green(after DPCM mode 4): " + tk.DPCM(mtx, height, width, "green", 4));
 
         //--Blue--
-        n = new int[256];
-        for (int x = 0; x < 256; x++){
-            for (int i = 0; i < DBlue.length; i++){
-                if (DBlue[i] == x){
-                    n[x] = n[x] + 1;
-                }
-            }
-        }
-
-        p = new double[256];
-        for (int i = 0; i < n.length; i++){
-            //System.out.println(i);
-            for (int j = 0; j < n[i]; j++){
-                p[i] = (double) n[i]/DBlue.length;
-            }
-        }
-        H = 0;
-        for (int i = 0; i < 256; i++){
-            H += p[i]*tk.log2(p[i]);
-        }
-        H = H * -1;
-        System.out.println("Entropy for blue(after DPCM): " + H);
+        System.out.println("\nEntropy for blue(after DPCM mode 1): " + tk.DPCM(mtx, height, width, "blue", 1));
+        System.out.println("Entropy for blue(after DPCM mode 2): " + tk.DPCM(mtx, height, width, "blue", 2));
+        System.out.println("Entropy for blue(after DPCM mode 3): " + tk.DPCM(mtx, height, width, "blue", 3));
+        System.out.println("Entropy for blue(after DPCM mode 4): " + tk.DPCM(mtx, height, width, "blue", 4));
 
         //--Y--
-        n = new int[256];
-        for (int x = 0; x < 256; x++){
-            for (int i = 0; i < DY.length; i++){
-                if (DY[i] == x){
-                    n[x] = n[x] + 1;
-                }
-            }
-        }
-
-        p = new double[256];
-        for (int i = 0; i < n.length; i++){
-            //System.out.println(i);
-            for (int j = 0; j < n[i]; j++){
-                p[i] = (double) n[i]/DY.length;
-            }
-        }
-        H = 0;
-        for (int i = 0; i < 256; i++){
-            H += p[i]*tk.log2(p[i]);
-        }
-        H = H * -1;
-        System.out.println("Entropy for Y(after DPCM): " + H);
+        System.out.println("\nEntropy for Y(after DPCM mode 1): " + tk.DPCM(YCbCrMtx, height, width, "blue", 1));
+        System.out.println("Entropy for Y(after DPCM mode 2): " + tk.DPCM(YCbCrMtx, height, width, "blue", 2));
+        System.out.println("Entropy for Y(after DPCM mode 3): " + tk.DPCM(YCbCrMtx, height, width, "blue", 3));
+        System.out.println("Entropy for Y(after DPCM mode 4): " + tk.DPCM(YCbCrMtx, height, width, "blue", 4));
 
         //--Cr--
-        n = new int[256];
-        for (int x = 0; x < 256; x++){
-            for (int i = 0; i < DCb.length; i++){
-                if (DCb[i] == x){
-                    n[x] = n[x] + 1;
-                }
-            }
-        }
-
-        p = new double[256];
-        for (int i = 0; i < n.length; i++){
-            //System.out.println(i);
-            for (int j = 0; j < n[i]; j++){
-                p[i] = (double) n[i]/DCb.length;
-            }
-        }
-        H = 0;
-        for (int i = 0; i < 256; i++){
-            H += p[i]*tk.log2(p[i]);
-        }
-        H = H * -1;
-        System.out.println("Entropy for Cb(after DPCM): " + H);
+        System.out.println("\nEntropy for Cb(after DPCM mode 1): " + tk.DPCM(YCbCrMtx, height, width, "green", 1));
+        System.out.println("Entropy for Cb(after DPCM mode 2): " + tk.DPCM(YCbCrMtx, height, width, "green", 2));
+        System.out.println("Entropy for Cb(after DPCM mode 3): " + tk.DPCM(YCbCrMtx, height, width, "green", 3));
+        System.out.println("Entropy for Cb(after DPCM mode 4): " + tk.DPCM(YCbCrMtx, height, width, "green", 4));
 
         //--Cr--
-        n = new int[256];
-        for (int x = 0; x < 256; x++){
-            for (int i = 0; i < DCr.length; i++){
-                if (DCr[i] == x){
-                    n[x] = n[x] + 1;
-                }
-            }
-        }
+        System.out.println("\nEntropy for Cr(after DPCM mode 1): " + tk.DPCM(YCbCrMtx, height, width, "red", 1));
+        System.out.println("Entropy for Cr(after DPCM mode 2): " + tk.DPCM(YCbCrMtx, height, width, "red", 2));
+        System.out.println("Entropy for Cr(after DPCM mode 3): " + tk.DPCM(YCbCrMtx, height, width, "red", 3));
+        System.out.println("Entropy for Cr(after DPCM mode 4): " + tk.DPCM(YCbCrMtx, height, width, "red", 4));
 
-        p = new double[256];
-        for (int i = 0; i < n.length; i++){
-            //System.out.println(i);
-            for (int j = 0; j < n[i]; j++){
-                p[i] = (double) n[i]/DCr.length;
-            }
-        }
-        H = 0;
-        for (int i = 0; i < 256; i++){
-            H += p[i]*tk.log2(p[i]);
-        }
-        H = H * -1;
-        System.out.println("Entropy for Cr(after DPCM): " + H);
     }
 }
